@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create an S3 bucket with versioning enabled.
+
+Resources:
+  # S3 Bucket
+  MyS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-bucket"
+      VersioningConfiguration:
+        Status: Enabled  # Enable versioning for the S3 bucket
+      AccessControl: Private  # Set bucket access to private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256  # Enable server-side encryption
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # Bucket Policy to Restrict Public Access
+  S3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref MyS3Bucket
+      PolicyDocument:
+        Statement:
+          - Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !Sub "${MyS3Bucket.Arn}"
+              - !Sub "${MyS3Bucket.Arn}/*"
+            Condition:
+              Bool:
+                "aws:SecureTransport": "false"  # Deny any requests that are not using SSL/TLS
+
+Outputs:
+  BucketName:
+    Description: The name of the S3 bucket
+    Value: !Ref MyS3Bucket
+
+  BucketArn:
+    Description: The ARN of the S3 bucket
+    Value: !GetAtt MyS3Bucket.Arn
