@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to create an S3 bucket with versioning enabled.
+Description: CloudFormation template to create an S3 bucket with versioning and lifecycle policies enabled.
 
 Resources:
   # S3 Bucket
@@ -19,6 +19,24 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          # Rule for transitioning current and previous versions to Glacier
+          - Id: "MoveNonCurrentVersionsToGlacier"
+            Status: Enabled
+            NoncurrentVersionTransitions:
+              - StorageClass: GLACIER
+                TransitionInDays: 30  # Move non-current versions to Glacier after 30 days
+            NoncurrentVersionExpirationInDays: 365  # Delete non-current versions after 365 days
+          # Rule for current object lifecycle management
+          - Id: "TransitionCurrentObjects"
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA
+                TransitionInDays: 30  # Transition current objects to Infrequent Access after 30 days
+              - StorageClass: GLACIER
+                TransitionInDays: 90  # Transition current objects to Glacier after 90 days
+            ExpirationInDays: 365  # Delete current objects after 365 days
 
   # Bucket Policy to Restrict Public Access
   S3BucketPolicy:
