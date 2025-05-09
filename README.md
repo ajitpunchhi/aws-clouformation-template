@@ -133,11 +133,3 @@ However, you should review and adjust the following:
 
 ### VPC Template
 - No parameters required (uses default AZs)
-
-## License
-
-[Insert your license information here]
-
-## Contributing
-
-[Insert contribution guidelines here]
